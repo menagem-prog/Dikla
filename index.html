@@ -584,10 +584,11 @@
       aspect-ratio: 1 / 1;
       object-fit: cover;
       border-radius: 14px;
-      border: 2px solid rgba(212, 175, 55, 0.5);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      border: 2px solid rgba(212, 175, 55, 0.8);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
       opacity: 0;
       animation: galleryFadeIn 0.7s ease-out forwards;
+      transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
     }
 
     @keyframes galleryFadeIn {
@@ -599,6 +600,12 @@
         opacity: 1;
         transform: translateY(0) scale(1);
       }
+    }
+
+    .victory-gallery img:hover,
+    .victory-gallery img:active {
+      transform: scale(1.05);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.75);
     }
 
     .victory-closing {
@@ -659,6 +666,35 @@
       z-index: 9999;
     }
 
+    .final-congrats {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.9));
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 10001;
+    }
+
+    .final-congrats.visible {
+      display: flex;
+    }
+
+    .final-congrats-text {
+      font-size: clamp(2.6rem, 14vw, 3.6rem);
+      font-weight: 700;
+      color: var(--gold-light);
+      text-shadow: 0 0 20px rgba(212, 175, 55, 0.9), 0 0 40px rgba(212, 175, 55, 0.7);
+      animation: sparkle 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes sparkle {
+      0% { opacity: 0.8; transform: scale(0.96) rotate(-1deg); }
+      50% { opacity: 1; transform: scale(1.02) rotate(1deg); }
+      100% { opacity: 0.9; transform: scale(1) rotate(0deg); }
+    }
+
     /* Countdown overlay */
     #countdown-overlay {
       position: fixed;
@@ -703,9 +739,10 @@
     }
 
     #countdown-overlay.final-minute #countdown-timer {
-      font-size: clamp(3.2rem, 12vw, 4.2rem);
+      font-size: clamp(3.2rem, 25vw, 4.8rem);
       letter-spacing: 0.08em;
       animation: finalPulse 1s ease-in-out infinite;
+      text-shadow: 0 0 18px rgba(212, 175, 55, 0.9), 0 0 32px rgba(212, 175, 55, 0.7);
     }
 
     @keyframes finalPulse {
@@ -849,6 +886,10 @@
     <div id="countdown-quote" aria-live="polite"></div>
   </div>
 
+  <div id="final-congrats-overlay" class="final-congrats" aria-hidden="true">
+    <div class="final-congrats-text">מזל טוב דקלה!</div>
+  </div>
+
   <button type="button" id="top-menu-button" aria-label="תפריט">
     <span></span>
   </button>
@@ -984,6 +1025,7 @@
         return base + '_session-' + rnd;
       })();
       var countdownClipStarted = false;
+      var lastBeepSecond = null;
       // כתובת ה-ngrok ששומר את הווידאו עבור בדיקות מהמובייל
       var UPLOAD_VIDEO_URL = 'https://laureen-untotted-opportunely.ngrok-free.dev/upload';
 
@@ -1100,12 +1142,20 @@
             countdownClipStarted = true;
             startRecording(10000, 'countdown', 'timer');
           }
+          if (diff > 0 && diff <= 10000) {
+            var sec = Math.floor(diff / 1000);
+            if (lastBeepSecond !== sec) {
+              lastBeepSecond = sec;
+              playTickSound(10 - sec);
+            }
+          }
           if (diff <= 0) {
             overlay.style.display = 'none';
             clearInterval(countdownInterval);
             countdownInterval = null;
             if (countdownQuoteTimer) clearTimeout(countdownQuoteTimer);
             countdownQuoteTimer = null;
+            showFinalCongrats();
             showScreen(0);
             var topBtn = document.getElementById('top-menu-button');
             if (topBtn) topBtn.style.display = 'none';
@@ -1539,6 +1589,37 @@
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
           osc.start(ctx.currentTime);
           osc.stop(ctx.currentTime + 0.2);
+        } catch (e) {}
+      }
+
+      function playTickSound(step) {
+        try {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          var baseFreq = 700;
+          var freq = baseFreq + (step * 25);
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(0.05, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.12);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.1);
+        } catch (e) {}
+      }
+
+      function showFinalCongrats() {
+        try {
+          var overlay = document.getElementById('final-congrats-overlay');
+          if (!overlay) return;
+          overlay.classList.add('visible');
+          overlay.setAttribute('aria-hidden', 'false');
+          playVictoryChime();
+          setTimeout(function () {
+            overlay.classList.remove('visible');
+            overlay.setAttribute('aria-hidden', 'true');
+          }, 2200);
         } catch (e) {}
       }
 
