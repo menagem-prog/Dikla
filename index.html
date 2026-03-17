@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>יום הולדת 38 שמח דקלה!</title>
+  <meta name="theme-color" content="#d4af37">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="דקלה 💛">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/jpeg" href="app icon.jpg">
+  <link rel="apple-touch-icon" href="app icon.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --gold: #d4af37;
+      --gold-light: #e8c547;
+      --bg-dark: #0a0a0a;
+      --bg-gray: #1a1a1a;
+      --text-white: #f5f5f5;
+      --error: #e74c3c;
+    }
+
+    body {
+      font-family: 'Assistant', sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-gray) 50%, var(--bg-dark) 100%);
+      min-height: 100vh;
+      color: var(--text-white);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .screen {
+      display: none;
+      position: relative;
+      min-height: 100vh;
+      padding: 2rem 1.5rem 3rem;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Screen 1 - Welcome */
+    .welcome-img {
+      width: 180px;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 4px solid var(--gold);
+      box-shadow: 0 0 24px rgba(212, 175, 55, 0.3);
+      margin: 1.5rem 0;
+    }
+
+    .welcome-img.placeholder {
+      background: var(--bg-gray);
+    }
+
+    h1 {
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      font-weight: 600;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .subtitle {
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      color: rgba(245, 245, 245, 0.9);
+      margin-bottom: 1.5rem;
+      font-weight: 400;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      color: var(--bg-dark);
+      border: none;
+      padding: 0.9rem 2rem;
+      font-size: 1.1rem;
+      font-family: inherit;
+      font-weight: 600;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(212, 175, 55, 0.35);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(212, 175, 55, 0.45);
+    }
+
+    .btn:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    .btn-subtle {
+      background: transparent;
+      color: rgba(212, 175, 55, 0.85);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      font-size: 0.95rem;
+      padding: 0.5rem 1rem;
+      box-shadow: none;
+    }
+
+    .btn-subtle:hover {
+      background: rgba(212, 175, 55, 0.12);
+      color: var(--gold);
+    }
+
+    .upload-status {
+      margin-top: 0.75rem;
+      font-size: 0.95rem;
+      min-height: 1.5em;
+    }
+
+    /* Gold accent line */
+    .screen.active::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0.6;
+      z-index: 1;
+    }
+
+    /* Screen 2 - Timeline (curved, alternating, scrollable) */
+    #screen-2.screen.active {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .timeline-header {
+      flex-shrink: 0;
+      padding: 1.5rem 1.25rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      background: linear-gradient(180deg, rgba(26, 26, 26, 0.6) 0%, transparent 100%);
+    }
+
+    .timeline-header h1 {
+      margin-bottom: 0;
+    }
+
+    .timeline-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 0 2rem;
+    }
+
+    .timeline-track {
+      position: relative;
+      padding: 1.5rem 0;
+      min-height: 100%;
+    }
+
+    #timeline-nodes {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .timeline-track__line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .timeline-track__line path {
+      fill: none;
+      stroke: var(--gold);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.9;
+      filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.25));
+      stroke-dasharray: 5000;
+      stroke-dashoffset: 5000;
+      transition: stroke-dashoffset 1s ease-out;
+    }
+
+    .timeline-track__line path.timeline-path--flow {
+      stroke-dashoffset: 0;
+    }
+
+    .timeline-node {
+      position: relative;
+      z-index: 1;
+      min-height: 200px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 85%;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .timeline-node.timeline-node--revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .timeline-node--left {
+      align-self: flex-end;
+      margin-left: 0;
+      margin-right: 8%;
+    }
+
+    .timeline-node--right {
+      align-self: flex-start;
+      margin-right: 0;
+      margin-left: 8%;
+    }
+
+    .timeline-node__circle {
+      flex-shrink: 0;
+      width: 132px;
+      height: 132px;
+      border-radius: 20px;
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 28px rgba(212, 175, 55, 0.35), inset 0 0 0 1px rgba(255,255,255,0.08);
+      overflow: hidden;
+      background: var(--bg-gray);
+    }
+
+    .timeline-node__circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .timeline-node__circle .placeholder {
+      background: var(--bg-gray);
+    }
+
+    .timeline-node__content {
+      width: 100%;
+      min-width: 0;
+      padding: 0.75rem 0 0;
+      text-align: center;
+    }
+
+    .timeline-node__year {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 0.25rem;
+      letter-spacing: 0.02em;
+    }
+
+    .timeline-node__title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-white);
+      margin-bottom: 0.35rem;
+      line-height: 1.35;
+    }
+
+    .timeline-node__desc {
+      font-size: 0.9rem;
+      color: rgba(245, 245, 245, 0.88);
+      line-height: 1.5;
+    }
+
+    .timeline-node__micro {
+      font-size: 0.8rem;
+      color: rgba(212, 175, 55, 0.9);
+      font-style: italic;
+      margin-top: 0.35rem;
+      line-height: 1.4;
+    }
+
+    .timeline-node--highlight .timeline-node__circle {
+      border-width: 4px;
+      box-shadow: 0 0 32px rgba(212, 175, 55, 0.5), inset 0 0 0 1px rgba(255,255,255,0.1);
+    }
+
+    .timeline-footer {
+      flex-shrink: 0;
+      padding: 1.25rem 1.5rem 1.5rem;
+      text-align: center;
+      border-top: 1px solid rgba(212, 175, 55, 0.2);
+      background: linear-gradient(0deg, rgba(26, 26, 26, 0.7) 0%, transparent 100%);
+    }
+
+    .timeline-next-btn {
+      margin: 0;
+    }
+
+    .timeline-load-msg {
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: rgba(245, 245, 245, 0.9);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .timeline-load-msg p {
+      margin-bottom: 0.75rem;
+    }
+
+    .timeline-load-msg code {
+      background: rgba(212, 175, 55, 0.2);
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+
+    .timeline-retry-btn {
+      margin-top: 1rem;
+    }
+
+    /* Screen 3 - Stations (dynamic, 5 stations) */
+    .station-progress {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+      color: var(--gold);
+      letter-spacing: 0.2em;
+    }
+
+    .station-progress span { opacity: 0.35; }
+    .station-progress span.done { opacity: 1; }
+
+    .station-flavor {
+      font-size: 0.95rem;
+      color: rgba(212, 175, 55, 0.95);
+      font-style: italic;
+      margin-bottom: 1rem;
+      min-height: 1.5em;
+    }
+
+    .station-screen h1 {
+      margin-bottom: 1rem;
+    }
+
+    .station-image-wrap {
+      width: 100%;
+      max-width: 220px;
+      margin: 0 auto 1.25rem;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+      background: var(--bg-gray);
+    }
+
+    .station-image-wrap:empty {
+      display: none;
+    }
+
+    .station-image-wrap.has-image {
+      display: block;
+    }
+
+    .station-image-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+      vertical-align: middle;
+    }
+
+    .station-text {
+      font-size: clamp(1rem, 2.8vw, 1.15rem);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+      color: rgba(245, 245, 245, 0.95);
+    }
+
+    .station-instruction {
+      font-size: 0.95rem;
+      color: var(--gold);
+      margin-bottom: 1.25rem;
+      font-weight: 500;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 280px;
+      margin: 0 auto 1rem;
+    }
+
+    .station-input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      font-family: inherit;
+      border: 2px solid rgba(212, 175, 55, 0.5);
+      border-radius: 12px;
+      background: rgba(26, 26, 26, 0.8);
+      color: var(--text-white);
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .station-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+    }
+
+    .station-input::placeholder {
+      color: rgba(245, 245, 245, 0.4);
+    }
+
+    .message {
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+      min-height: 1.5em;
+    }
+
+    .message.error {
+      color: var(--error);
+      font-weight: 500;
+    }
+
+    .message.success {
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    .success-toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(212, 175, 55, 0.95);
+      color: var(--bg-dark);
+      padding: 0.75rem 1.25rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      z-index: 1000;
+      animation: toastIn 0.4s ease-out, toastOut 0.3s ease-in 2.1s forwards;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    @keyframes toastOut {
+      to { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+    }
+
+    .gold-flash {
+      animation: goldFlash 0.6s ease-out;
+    }
+
+    @keyframes goldFlash {
+      0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.6); }
+      50% { box-shadow: 0 0 0 12px rgba(212, 175, 55, 0.2); }
+      100% { box-shadow: none; }
+    }
+
+    #screen-0.btn-bounce .btn#permissions-btn {
+      animation: btnBounce 0.6s ease-out;
+    }
+
+    @keyframes btnBounce {
+      0%, 100% { transform: scale(1); }
+      40% { transform: scale(1.08); }
+      70% { transform: scale(0.98); }
+    }
+
+    /* Screen 3 - Instructions */
+    .instructions-screen .instructions-text {
+      font-size: clamp(1rem, 2.8vw, 1.2rem);
+      line-height: 1.8;
+      color: rgba(245, 245, 245, 0.95);
+      max-width: 360px;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Screen 5 - Victory */
+    .victory-screen {
+      position: relative;
+    }
+
+    .victory-photos-wrap {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .victory-screen .victory-title,
+    .victory-screen .victory-text,
+    .victory-screen .btn {
+      position: relative;
+      z-index: 1;
+    }
+
+    .flying-photo {
+      position: absolute;
+      width: 176px;
+      height: 176px;
+      object-fit: cover;
+      border-radius: 16px;
+      border: 2px solid rgba(212, 175, 55, 0.6);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      animation: flyPhoto 8s ease-in-out forwards;
+    }
+
+    @keyframes flyPhoto {
+      0% {
+        transform: translateY(10px) scale(0.9);
+        opacity: 0;
+      }
+      15% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      70% {
+        transform: translateY(-10px) scale(1.02);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-20px) scale(0.96);
+        opacity: 0;
+      }
+    }
+
+    .victory-title {
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+    }
+
+    .victory-text {
+      font-size: clamp(1rem, 2.8vw, 1.2rem);
+      line-height: 1.8;
+      color: rgba(245, 245, 245, 0.95);
+      max-width: 340px;
+    }
+
+    .victory-closing {
+      font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+      color: rgba(212, 175, 55, 0.95);
+      font-style: italic;
+      margin-top: 1rem;
+      max-width: 320px;
+    }
+
+    .intro-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 10, 0.97);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 10003;
+      padding: 2rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+
+    .intro-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .intro-overlay p {
+      font-size: clamp(1.15rem, 4vw, 1.5rem);
+      line-height: 1.7;
+      color: rgba(245, 245, 245, 0.95);
+      max-width: 340px;
+    }
+
+    #countdown-quote {
+      font-family: 'Caveat', cursive;
+      font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+      font-weight: 600;
+      color: rgba(212, 175, 55, 0.9);
+      margin-top: 1.25rem;
+      max-width: 280px;
+      min-height: 2.5em;
+      line-height: 1.5;
+    }
+
+    /* Confetti container */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Countdown overlay */
+    #countdown-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(212, 175, 55, 0.18), transparent 55%), #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 10000;
+      color: var(--text-white);
+      padding: 2rem 1.5rem;
+    }
+
+    #countdown-overlay h1 {
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+      margin-bottom: 1rem;
+    }
+
+    #countdown-overlay p {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      color: rgba(245, 245, 245, 0.9);
+    }
+
+    #countdown-timer {
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Top-right menu (for creator) */
+    #top-menu-button {
+      position: fixed;
+      top: 2.5rem;
+      right: 0.75rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 245, 245, 0.35);
+      background: rgba(0, 0, 0, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10001;
+      cursor: pointer;
+    }
+
+    #top-menu-button span {
+      display: block;
+      width: 3px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--text-white);
+      box-shadow: 0 -5px 0 var(--text-white), 0 5px 0 var(--text-white);
+    }
+
+    #dev-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 88%;
+      max-width: 320px;
+      background: rgba(10, 10, 10, 0.98);
+      backdrop-filter: blur(12px);
+      border-left: 1px solid rgba(212, 175, 55, 0.35);
+      padding: 2rem 1.5rem 1.5rem;
+      color: rgba(245, 245, 245, 0.95);
+      font-size: 1rem;
+      line-height: 1.6;
+      z-index: 10002;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.4);
+    }
+
+    #dev-menu.open {
+      display: flex;
+    }
+
+    #dev-menu .menu-app-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 0.25rem;
+      line-height: 1.3;
+    }
+
+    #dev-menu .menu-version {
+      font-size: 0.95rem;
+      color: rgba(245, 245, 245, 0.7);
+      margin-bottom: 1.5rem;
+    }
+
+    #dev-menu .menu-section {
+      margin-bottom: 1.25rem;
+    }
+
+    #dev-menu .menu-section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+    }
+
+    #dev-code-input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid rgba(212, 175, 55, 0.45);
+      background: rgba(26, 26, 26, 0.95);
+      color: var(--text-white);
+      font-family: inherit;
+      font-size: 1.1rem;
+      letter-spacing: 0.15em;
+      text-align: center;
+    }
+
+    #dev-menu .menu-who {
+      font-size: 1.05rem;
+      color: rgba(245, 245, 245, 0.95);
+      line-height: 1.7;
+    }
+
+    #dev-menu .menu-dev-section {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(212, 175, 55, 0.2);
+      font-size: 0.85rem;
+      color: rgba(245, 245, 245, 0.7);
+    }
+
+    #dev-menu-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    #dev-menu-actions button {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      background: transparent;
+      color: var(--gold);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    #dev-menu-actions button:hover {
+      background: rgba(212, 175, 55, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div id="countdown-overlay">
+    <h1>ההפתעה שלך בדרך...</h1>
+    <p>המסע ייפתח אוטומטית ביום שישי ה- 20/3/2026 ב‑08:00</p>
+    <div id="countdown-timer">--:--:--</div>
+    <div id="countdown-quote" aria-live="polite"></div>
+  </div>
+
+  <button type="button" id="top-menu-button" aria-label="תפריט">
+    <span></span>
+  </button>
+  <div id="dev-menu" aria-hidden="true">
+    <div class="menu-app-name">יום הולדת 38 שמח דקלה!</div>
+    <div class="menu-version" id="dev-menu-version">גרסה 1.0.0</div>
+    <div class="menu-section">
+      <div class="menu-section-title">קוד מפתח (מספרים בלבד)</div>
+      <input id="dev-code-input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="הקלידי קוד" autocomplete="off" maxlength="12">
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-title">מי אנחנו?</div>
+      <p class="menu-who">משפחת מנג'ם האלופים – שלום, דיקלה, גאיה, יהלי וליב 💛</p>
+    </div>
+    <div class="menu-dev-section">
+      <div class="menu-section-title">למפתחים בלבד</div>
+      <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+        <input id="dev-station-input" type="number" min="1" max="5" placeholder="תחנה 1–5" style="width:4rem; padding:0.4rem; border-radius:8px; border:1px solid rgba(212,175,55,0.4); background:rgba(26,26,26,0.9); color:#f5f5f5;">
+        <button type="button" id="dev-goto-station">עבור לתחנה</button>
+      </div>
+      <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem; font-size:0.9rem;">
+        <input type="checkbox" id="dev-recording-off"> כבוי הקלטה
+      </label>
+      <div id="dev-menu-actions">
+        <button type="button" id="dev-skip-btn">דלג על הספירה</button>
+        <button type="button" id="dev-close-btn">סגור</button>
+      </div>
+    </div>
+    <script type="application/json" id="credits-embed">{"title":"יום הולדת 38 שמח דקלה!","version":"1.0.0"}</script>
+  </div>
+  <!-- Screen 0: Permissions intro -->
+  <div id="screen-0" class="screen active">
+    <h1>לפני שמתחילים...</h1>
+    <p class="station-text">דקלה אהובה, כדי שנתעד את כל החיוכים, האפליקציה תבקש ממך:</p>
+    <p class="station-text">
+      • לאשר שימוש במצלמה.<br>
+      • לאשר שימוש במיקרופון.<br>
+      • ובעיקר – לחייך הרבה לאורך כל המסע.
+    </p>
+    <p class="station-instruction">כדי להמשיך, לחצי על הכפתור ואשרי למצלמה ולקול. אף אחד אחר לא רואה את זה, זה רק בשבילנו.</p>
+    <button type="button" class="btn" id="permissions-btn">אני מסכימה ומוכנה לחייך</button>
+  </div>
+
+  <!-- Screen 1: Welcome -->
+  <div id="screen-1" class="screen">
+    <h1>בוקר טוב, מלכת הבית.</h1>
+    <p class="subtitle">יום הולדת 38 שמח דקלה! מסע קסום מחכה לך...</p>
+    <img src="dikla.jpg" alt="דקלה" class="welcome-img" onerror="this.classList.add('placeholder'); this.alt='';">
+    <button type="button" class="btn" id="welcome-start-btn">בואי נתחיל</button>
+  </div>
+
+  <!-- Screen 2: Timeline – כותרת, עיגול+שנה+כותרת+כיתוב, קו מעוקל ימינה ויורד, גלילה -->
+  <div id="screen-2" class="screen">
+    <header class="timeline-header">
+      <h1>המסע של החיים שלנו</h1>
+    </header>
+    <div class="timeline-scroll">
+      <div class="timeline-track" id="timeline-track">
+        <svg class="timeline-track__line" id="timeline-svg" viewBox="0 0 100 2000" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M 25 0 C 50 100 75 100 75 200 C 50 300 25 300 25 400 C 50 500 75 500 75 600 C 50 700 25 700 25 800 C 50 900 75 900 75 1000 C 50 1100 25 1100 25 1200 C 50 1300 75 1300 75 1400 C 50 1500 25 1500 25 1600 C 50 1700 75 1700 75 1800 L 75 2000" />
+        </svg>
+        <div id="timeline-nodes"></div>
+      </div>
+    </div>
+    <footer class="timeline-footer">
+      <button type="button" class="btn timeline-next-btn" data-next="3">לחצי כאן למסע המתנה שלך</button>
+    </footer>
+    <script type="application/json" id="timeline-data-embed">[{"order": "001", "year": "2006", "title": "העולם נהיה יפה יותר", "description": "הקצינת ת''ש הכי יפה בצה''ל מגיעה לבסיס של שלום.", "image": "001/image.jpg", "microText": "עוד לא ידענו כמה צחוק ייכנס לבית"}, {"order": "002", "year": "2007", "title": "הנשיקה הראשונה", "description": "הרגע שבו הלב שלי עצר - ושלך עוד לא כ''כ.", "image": "002/image.jpg", "microText": "ההתחלה של הכל"}, {"order": "003", "year": "2012", "title": "התחלנו לצאת", "description": "ושבוע אחרי את עברת לגור אצלי.", "image": "003/image.jpg", "microText": "אין כמו בית"}, {"order": "004", "year": "2014", "title": "טבעת", "description": "אחרי שהתחננת שאת לא רוצה להיות כמו שאר הבנות שמצפות - הופתעת.", "image": "004/image.jpg", "microText": "הרגע שהכל השתנה"}, {"order": "005", "year": "2015", "title": "חתונה", "description": "מושלמת, הכלה הכי יפה בארץ.", "image": "005/image.jpg", "microText": "היום הכי יפה", "highlight": true}, {"order": "006", "year": "2015", "title": "ירח דבש", "description": "כובשים את ארה''ב במוסטנג אדומה עם גג נפתח", "image": "006/image.jpg", "microText": "הרפתקה אמריקאית"}, {"order": "007", "year": "2016", "title": "יש תואר!", "description": "את מתחילה את הקריירה המקצועית שלך", "image": "007/image.jpg", "microText": "גאים בך"}, {"order": "008", "year": "2018", "title": "הפכת לאמא", "description": "גאיה נולדה ומגלה לנו את הלב הענק שלך", "image": "008/image.jpg", "microText": "האמא הכי מדהימה"}, {"order": "009", "year": "2020", "title": "הצחוק מושלם", "description": "יהלי מצטרפת ומביאה ים של שטויות וצחוק הביתה.", "image": "009/image.jpg", "microText": "שתי מלכות קטנות"}, {"order": "010", "year": "2025", "title": "אושר קטן", "description": "הכי גדול שיש.", "image": "010/image.jpg", "microText": "ואנחנו רק מתחילים"}]</script>
+  </div>
+
+  <!-- Screen 3: הנחיות – אחרי הטיימליין, לפני התחנות -->
+  <div id="screen-3" class="screen instructions-screen">
+    <h1>משחק החיפוש</h1>
+    <p class="instructions-text">דקלה, עכשיו מתחיל החלק הכי כיף: תצטרכי לעבור במספר מקומות בבית, למצוא חבילה סודית, ולפתור רמזים בדרך. כל תחנה תכוון אותך לשלב הבא. מוכנה?</p>
+    <button type="button" class="btn" data-next="4">התחילי את משחק החיפוש</button>
+  </div>
+
+  <!-- Screen 4: Stations (5 תחנות, דינמי מ-JSON) -->
+  <div id="screen-4" class="screen station-screen">
+    <div class="station-progress" id="station-progress" aria-hidden="true"></div>
+    <h1 id="station-title"></h1>
+    <p class="station-flavor" id="station-flavor"></p>
+    <div class="station-image-wrap" id="station-image-wrap"></div>
+    <p class="station-text" id="station-riddle"></p>
+    <p class="station-instruction">הקלידי את המילה שכתובה בקפסולה.</p>
+    <div class="input-group">
+      <input type="text" class="station-input" id="station-input" placeholder="המילה מהקפסולה" autocomplete="off">
+      <button type="button" class="btn" id="station-check-btn">בדיקה</button>
+      <div class="message" id="station-message" aria-live="polite"></div>
+    </div>
+    <script type="application/json" id="stations-data-embed">[{"order": 1, "title": "תחנה ראשונה", "riddle": "הזמן לשחק! ברחבי הבית מוחבאות קפסולות זהב שחורות. הקפסולה הראשונה מחכה לך איפה שאת מבלה הכי הרבה זמן כל בוקר. מצאי את הקפסולה, פתחי אותה, והקלידי את המילה שכתובה בפנים.", "answer": "שעה מקלחת", "image": "stations/01.jpg"}, {"order": 2, "title": "תחנה שנייה", "riddle": "אלופה! הקפסולה השנייה מתחבאת במקום שאליו יהלי הכי לא אוהבת ללכת כל ערב. מצאי שם בין המשחקים שלה את הקפסולה והקלידי את התשובה...", "answer": "מסריחולי", "image": "stations/02.jpg"}, {"order": 3, "title": "תחנה שלישית", "riddle": "תשאלי את גאיה ויהלי איפה אבא היה שם להם תמיד את חבילות הקלפי קיי-פופ שלהן....", "answer": "זואי", "image": "stations/03.jpg"}, {"order": 4, "title": "תחנה רביעית", "riddle": "כל בוקר שאנחנו שותים קפה, ליב-לוף יושבת שם ונהנת לה - עד שהיא בוכה", "answer": "נדנדושי", "image": "stations/04.jpg"}, {"order": 5, "title": "תחנה חמישית", "riddle": "גאיה מאוד רצתה כזה, והיא חיכתה וחיכתה בסבלנות עד שהיא תקבל את זה, אבל עדיין היא לא יכלה להשתמש בזה...", "answer": "חינוך ביתי", "image": "stations/05.jpg"}]</script>
+  </div>
+
+  <!-- Screen 5: Victory -->
+  <div id="screen-5" class="screen victory-screen">
+    <div id="victory-photos-wrap" class="victory-photos-wrap" aria-hidden="true"></div>
+    <h1 class="victory-title">הצלחת! החבילה שלך נמצאת בתנור!</h1>
+    <p class="victory-text">עברת את כל המסע בהצלחה. עכשיו לפתוח את החבילה – והמשימות שמחכות בפנים. בהצלחה!</p>
+    <p class="victory-closing">תזכרי: לא רק היום את במרכז – כל השנה את המתנה שלנו.</p>
+    <button type="button" class="btn btn-subtle" id="victory-refresh-photos" style="margin-top:1rem; display:none;">תראי לי שוב את התמונות</button>
+    <a id="video-download" class="btn" href="#" style="display:none; margin-top:1rem;" download="dikla-journey.webm">להורדת הסרטון שלך</a>
+    <div id="upload-status" class="upload-status" aria-live="polite"></div>
+  </div>
+
+  <div id="intro-overlay" class="intro-overlay" aria-hidden="true">
+    <p>היום את לא סתם בת 38… את הגיבורה הראשית של מסע קטן בבית שלנו.</p>
+  </div>
+
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <script>
+    (function () {
+      const screens = document.querySelectorAll('.screen');
+      const confettiCanvas = document.getElementById('confetti-canvas');
+      var stationsData = [];
+      var currentStationIndex = 0;
+      var mediaStream = null;
+      var recordedSegments = [];
+      var countdownInterval = null;
+      var countdownQuoteTimer = null;
+      var MASTER_SKIP_CODE = '11111111';
+      var recordingDisabled = false;
+      var devGotoStationIndex = null;
+      // כתובת השרת המקומי ששומר את הווידאו (אפשר לשנות ל-ngrok אם צריך)
+      var UPLOAD_VIDEO_URL = 'http://localhost:3000/upload';
+
+      var COUNTDOWN_QUOTES = [
+        'Curiosity killed the cat', 'Good things come to those who wait', 'Patience is a virtue',
+        "Don't count your chickens before they hatch", 'All in good time', 'Slow and steady wins the race',
+        'Haste makes waste', 'The best things are worth waiting for', 'Time will tell',
+        "What's worth having is worth waiting for", 'Let it unfold', 'Wait for it',
+        'Patience pays off', 'No peeking', 'The surprise is in the waiting',
+        'Anticipation is half the joy', 'Hold your horses', 'Bide your time',
+        'Everything in its season', 'The early bird catches the worm – but patience catches the prize',
+        'Rushing spoils the surprise', 'Wait and see', 'Save the best for last',
+        'Don’t jump the gun', 'Let the clock run', 'Time reveals all',
+        'A watched pot never boils', 'The wait makes it sweeter', 'Stay curious, stay patient',
+        'Curiosity is great – patience greater', 'Some things can’t be rushed',
+        'The best is yet to come', 'Keep calm and wait', 'Soon enough',
+        'Not yet – and that’s okay', 'Delayed is not denied', 'Trust the timing',
+        'Wait for the right moment', 'Patience brings rewards', 'Hold on a little longer',
+        'Good things take time', 'Don’t spoil the surprise', 'Let the moment come',
+        'Anticipation builds excitement', 'The wait is almost over', 'Almost there – wait for it',
+        'Resist the urge to peek', 'Patience is the key', 'Slow down and enjoy the wait',
+        'Timing is everything', 'Wait your turn', 'The best surprises come to those who wait',
+        'Don’t rush the magic', 'Let time do its work', 'Stay put – it’s worth it',
+        'Curiosity is natural – patience is wisdom', 'Hold back and be rewarded',
+        'Not before its time', 'The reveal will come', 'Count the minutes if you must – but wait',
+        'A little longer now', 'Patience, grasshopper', 'Waiting is part of the gift',
+        'Keep waiting – you’ll see', 'No shortcuts to the best moments', 'Breathe and wait',
+        'The cat that waited got the cream', 'Your turn will come', 'Wait and wonder',
+        'Delay makes the heart grow fonder', 'Stay patient, stay excited', 'Almost time',
+        'Don’t peek – the best is coming', 'Good things come when you wait for them',
+        'Patience is power', 'Hold tight', 'Soon you’ll see', 'Let the countdown finish',
+        'Waiting is hard – but worth it', 'Trust the wait', 'Not long now'
+      ];
+
+      var WRONG_ANSWER_MSGS = [
+        'חמודה, זה לא כתוב בקפסולה 😉',
+        'ניסיון יפה! עוד ניסיון קטן?',
+        'טוב, זה היה קרוב… אבל לא'
+      ];
+
+      function showScreen(id) {
+        const num = String(id);
+        screens.forEach(function (el) {
+          el.classList.toggle('active', el.id === 'screen-' + num);
+        });
+        if (num === '2') buildTimeline();
+        if (num === '4') {
+          var stationIdx = devGotoStationIndex !== null ? devGotoStationIndex : 0;
+          devGotoStationIndex = null;
+          loadAndShowStation(stationIdx);
+        }
+        if (num === '5') {
+          runConfetti();
+          startFlyingPhotos();
+          playVictoryChime();
+          var refreshBtn = document.getElementById('victory-refresh-photos');
+          if (refreshBtn) {
+            refreshBtn.style.display = 'none';
+            clearTimeout(window._victoryRefreshTimer);
+            window._victoryRefreshTimer = setTimeout(function () {
+              if (refreshBtn && document.getElementById('screen-5').classList.contains('active')) refreshBtn.style.display = 'inline-block';
+            }, 20000);
+          }
+        }
+        if (num === '0') {
+          var s0 = document.getElementById('screen-0');
+          if (s0) {
+            s0.classList.add('btn-bounce');
+            setTimeout(function () { s0.classList.remove('btn-bounce'); }, 700);
+          }
+        }
+      }
+
+      function startCountdown() {
+        var overlay = document.getElementById('countdown-overlay');
+        var timerEl = document.getElementById('countdown-timer');
+        var quoteEl = document.getElementById('countdown-quote');
+        if (!overlay || !timerEl) return;
+        var target = new Date(2026, 2, 20, 8, 0, 0);
+        function setQuote() {
+          if (!quoteEl || COUNTDOWN_QUOTES.length === 0) return;
+          quoteEl.textContent = COUNTDOWN_QUOTES[Math.floor(Math.random() * COUNTDOWN_QUOTES.length)];
+          quoteEl.style.display = 'block';
+        }
+        function scheduleNextQuote() {
+          var now = new Date();
+          var ms = now.getTime();
+          var nextMin = Math.ceil((now.getMinutes() + 1) / 2) * 2;
+          var next = new Date(now);
+          if (nextMin >= 60) {
+            next.setHours(next.getHours() + 1);
+            next.setMinutes(0, 0, 0);
+          } else {
+            next.setMinutes(nextMin, 0, 0);
+          }
+          var delay = Math.max(1000, next.getTime() - ms);
+          if (countdownQuoteTimer) clearTimeout(countdownQuoteTimer);
+          countdownQuoteTimer = setTimeout(function () {
+            setQuote();
+            scheduleNextQuote();
+          }, delay);
+        }
+        setQuote();
+        scheduleNextQuote();
+        function update() {
+          var now = new Date();
+          var diff = target.getTime() - now.getTime();
+          if (diff <= 0) {
+            overlay.style.display = 'none';
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+            if (countdownQuoteTimer) clearTimeout(countdownQuoteTimer);
+            countdownQuoteTimer = null;
+            showScreen(0);
+            var topBtn = document.getElementById('top-menu-button');
+            if (topBtn) topBtn.style.display = 'none';
+            return;
+          }
+          var totalSec = Math.floor(diff / 1000);
+          var days = Math.floor(totalSec / 86400);
+          var hours = Math.floor((totalSec % 86400) / 3600);
+          var mins = Math.floor((totalSec % 3600) / 60);
+          var secs = totalSec % 60;
+          var dd = String(days).padStart(2, '0');
+          var hh = String(hours).padStart(2, '0');
+          var mm = String(mins).padStart(2, '0');
+          var ss = String(secs).padStart(2, '0');
+          timerEl.textContent = dd + ' ימים  ' + hh + ':' + mm + ':' + ss;
+        }
+        update();
+        countdownInterval = setInterval(update, 1000);
+      }
+
+      function requestMediaAndStart() {
+        var constraints = { video: { facingMode: 'user' }, audio: true };
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showScreen(1);
+          return;
+        }
+        navigator.mediaDevices.getUserMedia(constraints)
+          .then(function (stream) {
+            mediaStream = stream;
+            showScreen(1);
+          })
+          .catch(function () {
+            showScreen(1);
+          });
+      }
+
+      function getStationsData(cb) {
+        var el = document.getElementById('stations-data-embed');
+        function useEmbed() {
+          try {
+            if (el && el.textContent && el.textContent.trim()) {
+              var data = JSON.parse(el.textContent.trim());
+              if (Array.isArray(data) && data.length > 0) { cb(data); return; }
+            }
+          } catch (e) {}
+          cb([]);
+        }
+        fetch('stations-data.json?t=' + Date.now())
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (Array.isArray(data) && data.length > 0) cb(data);
+            else useEmbed();
+          })
+          .catch(useEmbed);
+      }
+
+      function loadAndShowStation(index) {
+        getStationsData(function (data) {
+          stationsData = data;
+          currentStationIndex = index;
+          showStation(index);
+        });
+      }
+
+      function updateStationProgress(index) {
+        var prog = document.getElementById('station-progress');
+        if (!prog || !stationsData.length) return;
+        var n = stationsData.length;
+        var html = '';
+        for (var i = 0; i < n; i++) html += '<span class="' + (i <= index ? 'done' : '') + '">' + (i <= index ? '●' : '○') + '</span>';
+        prog.innerHTML = html;
+        prog.setAttribute('aria-hidden', 'false');
+      }
+
+      function showStation(index) {
+        var titleEl = document.getElementById('station-title');
+        var flavorEl = document.getElementById('station-flavor');
+        var imageWrap = document.getElementById('station-image-wrap');
+        var riddleEl = document.getElementById('station-riddle');
+        var inputEl = document.getElementById('station-input');
+        var msgEl = document.getElementById('station-message');
+        if (!stationsData[index] || !titleEl) return;
+        var s = stationsData[index];
+        updateStationProgress(index);
+        titleEl.textContent = s.title || ('תחנה ' + (index + 1));
+        if (flavorEl) {
+          flavorEl.textContent = s.flavor || '';
+          flavorEl.style.display = s.flavor ? 'block' : 'none';
+        }
+        riddleEl.textContent = s.riddle || '';
+        inputEl.value = '';
+        msgEl.textContent = '';
+        msgEl.className = 'message';
+        if (s.image && String(s.image).trim()) {
+          var imgPath = String(s.image).trim().replace(/"/g, '&quot;').replace(/</g, '&lt;');
+          imageWrap.innerHTML = '<img src="' + imgPath + '" alt="" loading="eager">';
+          imageWrap.classList.add('has-image');
+          imageWrap.style.display = 'block';
+          var img = imageWrap.querySelector('img');
+          if (img) img.onerror = function () { imageWrap.innerHTML = ''; imageWrap.classList.remove('has-image'); imageWrap.style.display = 'none'; };
+        } else {
+          imageWrap.innerHTML = '';
+          imageWrap.classList.remove('has-image');
+          imageWrap.style.display = 'none';
+        }
+      }
+
+      function onStationCheck() {
+        var inputEl = document.getElementById('station-input');
+        var msgEl = document.getElementById('station-message');
+        var s = stationsData[currentStationIndex];
+        if (!s) return;
+        var value = (inputEl && inputEl.value || '').replace(/\s/g, '');
+        var expected = (s.answer || '').replace(/\s/g, '');
+        msgEl.classList.remove('error', 'success');
+        if (value === expected || value === '203') {
+          msgEl.textContent = '';
+          msgEl.classList.add('success');
+          var screen4 = document.getElementById('screen-4');
+          if (screen4) {
+            screen4.classList.remove('gold-flash');
+            void screen4.offsetWidth;
+            screen4.classList.add('gold-flash');
+            setTimeout(function () { screen4.classList.remove('gold-flash'); }, 600);
+          }
+          if (currentStationIndex + 1 < stationsData.length) {
+            currentStationIndex++;
+            showStation(currentStationIndex);
+          } else {
+            buildFinalVideoAndGoToVictory();
+          }
+        } else {
+          msgEl.textContent = WRONG_ANSWER_MSGS[Math.floor(Math.random() * WRONG_ANSWER_MSGS.length)];
+          msgEl.classList.add('error');
+        }
+      }
+
+      function recordFiveSecondsSegment() {
+        if (recordingDisabled || !mediaStream || typeof MediaRecorder === 'undefined') return;
+        try {
+          var recorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+          var chunkList = [];
+          recorder.ondataavailable = function (e) {
+            if (e.data && e.data.size > 0) chunkList.push(e.data);
+          };
+          recorder.onstop = function () {
+            if (chunkList.length) {
+              recordedSegments.push(new Blob(chunkList, { type: 'video/webm' }));
+            }
+          };
+          recorder.start();
+          setTimeout(function () {
+            if (recorder.state === 'recording') recorder.stop();
+          }, 5000);
+        } catch (e) {
+          // ignore if recording not supported
+        }
+      }
+
+      function setUploadStatus(text, isError) {
+        var el = document.getElementById('upload-status');
+        if (!el) return;
+        el.textContent = text;
+        el.style.display = text ? 'block' : 'none';
+        el.style.color = isError ? 'var(--error)' : 'rgba(212, 175, 55, 0.95)';
+        el.style.marginTop = '0.75rem';
+        el.style.fontSize = '0.95rem';
+      }
+
+      function uploadVideoToServer(blob) {
+        if (!UPLOAD_VIDEO_URL || !blob) return;
+        setUploadStatus('שומר את הסרטון במחשב...');
+        var formData = new FormData();
+        formData.append('video', blob, 'dikla-journey.webm');
+        fetch(UPLOAD_VIDEO_URL, {
+          method: 'POST',
+          body: formData,
+          mode: 'cors'
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && data.ok) {
+              setUploadStatus('הסרטון נשמר במחשב ✓');
+            } else {
+              setUploadStatus('שגיאה בשמירת הסרטון: ' + (data && data.error ? data.error : 'תשובה לא צפויה'), true);
+            }
+          })
+          .catch(function (err) {
+            setUploadStatus('שגיאה בשמירת הסרטון: ' + (err.message || 'אין חיבור'), true);
+          });
+      }
+
+      function buildFinalVideoAndGoToVictory() {
+        if (recordedSegments.length) {
+          var blob = new Blob(recordedSegments, { type: 'video/webm' });
+          var url = URL.createObjectURL(blob);
+          var link = document.getElementById('video-download');
+          if (link) {
+            link.href = url;
+            link.style.display = 'inline-block';
+          }
+          uploadVideoToServer(blob);
+        }
+        showScreen(5);
+      }
+
+      function getTimelineData(cb) {
+        var el = document.getElementById('timeline-data-embed');
+        function useEmbed() {
+          try {
+            if (el && el.textContent && el.textContent.trim()) {
+              var data = JSON.parse(el.textContent.trim());
+              if (Array.isArray(data) && data.length > 0) { cb(data); return; }
+            }
+          } catch (e) {}
+          cb([]);
+        }
+        fetch('timeline-data.json?t=' + Date.now())
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (Array.isArray(data) && data.length > 0) cb(data);
+            else useEmbed();
+          })
+          .catch(useEmbed);
+      }
+
+      function buildTimeline() {
+        getTimelineData(function (items) {
+          var container = document.getElementById('timeline-nodes');
+          var track = document.getElementById('timeline-track');
+          var svg = document.getElementById('timeline-svg');
+          if (!container || !track) return;
+
+          if (!items || items.length === 0) return;
+
+          container.innerHTML = '';
+          for (var i = 0; i < items.length; i++) {
+            var it = items[i];
+            var side = i % 2 === 0 ? 'left' : 'right';
+            var node = document.createElement('div');
+            node.className = 'timeline-node timeline-node--' + side;
+
+            if (it.highlight) node.classList.add('timeline-node--highlight');
+            var circle = document.createElement('div');
+            circle.className = 'timeline-node__circle';
+            var img = document.createElement('img');
+            img.src = it.image || '';
+            img.alt = it.year || '';
+            img.loading = 'lazy';
+            img.onerror = function () { this.classList.add('placeholder'); this.alt = ''; };
+            circle.appendChild(img);
+
+            var content = document.createElement('div');
+            content.className = 'timeline-node__content';
+            var yearEl = document.createElement('div');
+            yearEl.className = 'timeline-node__year';
+            yearEl.textContent = it.year || '';
+            var titleEl = document.createElement('div');
+            titleEl.className = 'timeline-node__title';
+            titleEl.textContent = it.title || it.description || '';
+            var descEl = document.createElement('div');
+            descEl.className = 'timeline-node__desc';
+            descEl.textContent = it.description || '';
+            content.appendChild(yearEl);
+            content.appendChild(titleEl);
+            content.appendChild(descEl);
+            if (it.microText) {
+              var microEl = document.createElement('div');
+              microEl.className = 'timeline-node__micro';
+              microEl.textContent = it.microText;
+              content.appendChild(microEl);
+            }
+
+            node.appendChild(circle);
+            node.appendChild(content);
+            container.appendChild(node);
+          }
+
+          if (svg && items.length > 0) {
+            var totalH = items.length * 220;
+            track.style.minHeight = totalH + 'px';
+            svg.setAttribute('viewBox', '0 0 100 ' + totalH);
+            var path = svg.querySelector('path');
+            var pathLen = 0;
+            if (path) {
+              var seg = totalH / items.length;
+              var parts = ['M 25 0'];
+              for (var k = 1; k <= items.length; k++) {
+                var x = (k % 2 === 1) ? 75 : 25;
+                var y = k * seg;
+                var yMid = y - seg / 2;
+                if (k === 1) {
+                  parts.push('C 50 ' + (seg / 2) + ' 75 ' + (seg / 2) + ' 75 ' + seg);
+                } else {
+                  parts.push('C 50 ' + (yMid - seg * 0.05) + ' 50 ' + (yMid + seg * 0.05) + ' ' + x + ' ' + y);
+                }
+              }
+              path.setAttribute('d', parts.join(' '));
+              path.classList.remove('timeline-path--flow');
+              pathLen = path.getTotalLength ? path.getTotalLength() : 3000;
+              path.style.strokeDasharray = pathLen;
+              path.style.strokeDashoffset = pathLen;
+            }
+
+            var nodes = container.querySelectorAll('.timeline-node');
+            var FLOW_SEC = 1500;
+            var idx = 0;
+            if (nodes.length > 0) {
+              nodes[0].classList.add('timeline-node--revealed');
+              if (path) {
+                path.style.strokeDashoffset = pathLen * (1 - 1 / items.length);
+                path.classList.add('timeline-path--flow');
+              }
+              idx = 1;
+            }
+            var flowTimer = setInterval(function () {
+              if (idx >= items.length) {
+                clearInterval(flowTimer);
+                if (path) {
+                  path.style.strokeDashoffset = 0;
+                  path.classList.add('timeline-path--flow');
+                }
+                return;
+              }
+              nodes[idx].classList.add('timeline-node--revealed');
+              if (path) {
+                path.style.strokeDashoffset = pathLen * (1 - (idx + 1) / items.length);
+                path.classList.add('timeline-path--flow');
+              }
+              idx++;
+            }, FLOW_SEC);
+          }
+        });
+      }
+
+      function startFlyingPhotos() {
+        var wrap = document.getElementById('victory-photos-wrap');
+        if (!wrap) return;
+        wrap.innerHTML = '';
+
+        var fallback = [];
+        for (var i = 1; i <= 40; i++) fallback.push('photo-' + (i < 10 ? '0' + i : '' + i) + '.jpeg');
+
+        function startLoop(list) {
+          if (!list || list.length === 0) return;
+          var idx = 0;
+          if (window._flyingPhotosTimer) clearInterval(window._flyingPhotosTimer);
+          window._flyingPhotosTimer = setInterval(function () {
+            // שמירה על מספר תמונות מוגבל על המסך
+            var existing = wrap.querySelectorAll('.flying-photo');
+            if (existing.length > 6) return;
+
+            var filename = list[idx % list.length];
+            idx++;
+            var img = document.createElement('img');
+            img.className = 'flying-photo';
+            img.src = 'family/' + encodeURIComponent(filename);
+            img.alt = '';
+            img.loading = 'lazy';
+            // בחירת מיקום כך שייפרס על המסך ועם כמה שפחות חפיפות
+            var placed = false;
+            for (var attempt = 0; attempt < 10 && !placed; attempt++) {
+              var left = Math.random() * 70 + 15; // 15%–85%
+              var top = Math.random() * 70 + 10;  // 10%–80%
+              var ok = true;
+              for (var i = 0; i < existing.length; i++) {
+                var rect = existing[i].getBoundingClientRect();
+                var wrapRect = wrap.getBoundingClientRect();
+                var exLeft = ((rect.left + rect.right) / 2 - wrapRect.left) / wrapRect.width * 100;
+                var exTop = ((rect.top + rect.bottom) / 2 - wrapRect.top) / wrapRect.height * 100;
+                var dx = left - exLeft;
+                var dy = top - exTop;
+                if (Math.sqrt(dx * dx + dy * dy) < 25) { // מרחק מינימלי באחוזים
+                  ok = false;
+                  break;
+                }
+              }
+              if (ok) {
+                img.style.left = left + '%';
+                img.style.top = top + '%';
+                placed = true;
+              }
+            }
+            if (!placed) {
+              img.style.left = (Math.random() * 70 + 15) + '%';
+              img.style.top = (Math.random() * 70 + 10) + '%';
+            }
+            img.style.animationDuration = (6 + Math.random() * 4) + 's';
+            img.style.animationDelay = '0s';
+            img.onerror = function () { this.remove(); };
+            img.addEventListener('animationend', function () {
+              this.remove();
+            });
+            wrap.appendChild(img);
+          }, 1200);
+        }
+
+        fetch('family/family-photos.json?t=' + Date.now())
+          .then(function (r) { return r.json(); })
+          .then(function (arr) {
+            if (Array.isArray(arr) && arr.length > 0) startLoop(arr);
+            else startLoop(fallback);
+          })
+          .catch(function () { startLoop(fallback); });
+      }
+
+      function playVictoryChime() {
+        try {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
+          osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.24);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.35);
+        } catch (e) {}
+      }
+
+      function runConfetti() {
+        if (typeof confetti !== 'function') return;
+        const duration = 15000;
+        const end = Date.now() + duration;
+        const colors = ['#d4af37', '#e8c547', '#f5f5f5'];
+        (function frame() {
+          confetti({
+            particleCount: 2,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: colors
+          });
+          confetti({
+            particleCount: 2,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: colors
+          });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+      }
+
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.btn');
+        if (btn) {
+          if (btn.id === 'permissions-btn') {
+            requestMediaAndStart();
+            return;
+          }
+          if (btn.id === 'welcome-start-btn') {
+            var intro = document.getElementById('intro-overlay');
+            if (intro) {
+              intro.classList.add('visible');
+              intro.setAttribute('aria-hidden', 'false');
+            }
+            setTimeout(function () {
+              if (intro) {
+                intro.classList.remove('visible');
+                intro.setAttribute('aria-hidden', 'true');
+              }
+              showScreen(2);
+            }, 2600);
+            return;
+          }
+          if (btn.id === 'victory-refresh-photos') {
+            startFlyingPhotos();
+            return;
+          }
+          var next = btn.getAttribute('data-next');
+          if (next) {
+            showScreen(next);
+            return;
+          }
+          if (btn.id === 'station-check-btn') onStationCheck();
+        }
+      });
+
+      var stationInput = document.getElementById('station-input');
+      if (stationInput) {
+        stationInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') onStationCheck();
+        });
+      }
+      // הפעלת שעון הספירה לאחור ברגע שהעמוד נטען
+      startCountdown();
+
+      // --- Dev menu: side panel + skip countdown ---
+      (function initDevMenu() {
+        var btn = document.getElementById('top-menu-button');
+        var menu = document.getElementById('dev-menu');
+        var versionEl = document.getElementById('dev-menu-version');
+        var codeInput = document.getElementById('dev-code-input');
+        var skipBtn = document.getElementById('dev-skip-btn');
+        var closeBtn = document.getElementById('dev-close-btn');
+        if (!btn || !menu) return;
+
+        function openMenu() {
+          menu.classList.add('open');
+          menu.setAttribute('aria-hidden', 'false');
+          if (versionEl) {
+            var embed = document.getElementById('credits-embed');
+            if (embed) {
+              try {
+                var data = JSON.parse(embed.textContent.trim());
+                versionEl.textContent = 'גרסה ' + (data.version || '1.0.0');
+              } catch (e) {
+                versionEl.textContent = 'גרסה 1.0.0';
+              }
+            }
+          }
+        }
+
+        function closeMenu() {
+          menu.classList.remove('open');
+          menu.setAttribute('aria-hidden', 'true');
+        }
+
+        if (codeInput) {
+          codeInput.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '');
+          });
+          codeInput.addEventListener('keypress', function (e) {
+            if (e.key !== 'Backspace' && e.key !== 'Delete' && /\D/.test(e.key)) e.preventDefault();
+          });
+        }
+
+        function trySkipCountdown() {
+          var code = (codeInput && codeInput.value || '').trim();
+          if (code === MASTER_SKIP_CODE) {
+            var overlay = document.getElementById('countdown-overlay');
+            if (overlay) overlay.style.display = 'none';
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = null;
+            if (countdownQuoteTimer) clearTimeout(countdownQuoteTimer);
+            countdownQuoteTimer = null;
+            showScreen(0);
+            var topBtn = document.getElementById('top-menu-button');
+            if (topBtn) topBtn.style.display = 'none';
+            closeMenu();
+          }
+        }
+
+        var recCheck = document.getElementById('dev-recording-off');
+        if (recCheck) recCheck.addEventListener('change', function () { recordingDisabled = recCheck.checked; });
+        var gotoBtn = document.getElementById('dev-goto-station');
+        var stationInput = document.getElementById('dev-station-input');
+        if (gotoBtn && stationInput) {
+          gotoBtn.addEventListener('click', function () {
+            var num = parseInt(stationInput.value, 10);
+            if (num >= 1 && num <= 5) {
+              devGotoStationIndex = num - 1;
+              showScreen(4);
+              closeMenu();
+            }
+          });
+        }
+
+        btn.addEventListener('click', function () {
+          if (menu.classList.contains('open')) closeMenu();
+          else openMenu();
+        });
+        if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+        if (skipBtn) skipBtn.addEventListener('click', trySkipCountdown);
+        if (codeInput) {
+          codeInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') trySkipCountdown();
+          });
+        }
+      })();
+
+    })();
+
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    }
+  </script>
+</body>
+</html>

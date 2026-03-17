@@ -1,0 +1,26 @@
+{
+  "name": "יום הולדת 38 שמח דקלה!",
+  "short_name": "דקלה 💛",
+  "description": "מסע קסום ליום ההולדת",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#d4af37",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    {
+      "src": "app icon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "app icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
