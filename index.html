@@ -577,6 +577,8 @@
       justify-content: center;
       max-height: 260px;
       overflow-y: auto;
+      padding-bottom: 0.75rem;
+      scroll-behavior: smooth;
     }
 
     .victory-gallery img {
@@ -989,7 +991,7 @@
     <h1 class="victory-title">הצלחת! החבילה שלך נמצאת בתנור!</h1>
     <p class="victory-text">עברת את כל המסע בהצלחה. עכשיו לפתוח את החבילה – והמשימות שמחכות בפנים. בהצלחה!</p>
     <p class="victory-closing">תזכרי: לא רק היום את במרכז – כל השנה את המתנה שלנו.</p>
-    <a id="video-download" class="btn" href="#" style="display:none; margin-top:1rem;" download="dikla-journey.webm">להורדת הסרטון שלך</a>
+    <a id="video-download" class="btn" href="#" style="margin-top:1rem;" onclick="return false;">הסרטונים נשמרו במחשב המרכזי</a>
     <div id="upload-status" class="upload-status" aria-live="polite"></div>
     <div id="victory-gallery" class="victory-gallery" aria-hidden="true"></div>
   </div>
@@ -1183,6 +1185,7 @@
       function requestMediaAndStart() {
         var constraints = { video: { facingMode: 'user' }, audio: true };
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          alert('הדפדפן במכשיר הזה לא תומך בהקלטת וידאו. המשחק יפעל בלי צילום.');
           showScreen(1);
           return;
         }
@@ -1192,6 +1195,7 @@
             showScreen(1);
           })
           .catch(function () {
+            alert('לא הצלחנו לקבל גישה למצלמה ולקול. אפשר להמשיך לשחק, אבל בלי צילום.');
             showScreen(1);
           });
       }
@@ -1309,13 +1313,20 @@
 
       function startRecording(durationMs, eventType, slideName) {
         if (recordingDisabled || !mediaStream || typeof MediaRecorder === 'undefined') return;
+        if (window._activeRecorder && window._activeRecorder.state === 'recording') {
+          return;
+        }
         try {
           var recorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+          window._activeRecorder = recorder;
           var chunkList = [];
           recorder.ondataavailable = function (e) {
             if (e.data && e.data.size > 0) chunkList.push(e.data);
           };
           recorder.onstop = function () {
+            if (window._activeRecorder === recorder) {
+              window._activeRecorder = null;
+            }
             if (chunkList.length) {
               var blob = new Blob(chunkList, { type: 'video/webm' });
               var base = (slideName || 'slide').toString().replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -1358,13 +1369,13 @@
           .then(function (r) { return r.json(); })
           .then(function (data) {
             if (data && data.ok) {
-              setUploadStatus('הסרטון נשמר במחשב ✓');
+              setUploadStatus('הסרטונים נשמרים במחשב המרכזי ✓');
             } else {
-              setUploadStatus('שגיאה בשמירת הסרטון: ' + (data && data.error ? data.error : 'תשובה לא צפויה'), true);
+              console.error('Upload error:', data && data.error ? data.error : 'unexpected response');
             }
           })
           .catch(function (err) {
-            setUploadStatus('שגיאה בשמירת הסרטון: ' + (err.message || 'אין חיבור'), true);
+            console.error('Upload failed:', err && err.message ? err.message : err);
           });
       }
 
