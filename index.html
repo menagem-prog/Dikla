@@ -927,6 +927,8 @@
       var MASTER_SKIP_CODE = '11111111';
       var recordingDisabled = false;
       var devGotoStationIndex = null;
+      var sessionId = 'session-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+      var countdownClipStarted = false;
       // כתובת ה-ngrok ששומר את הווידאו עבור בדיקות מהמובייל
       var UPLOAD_VIDEO_URL = 'https://laureen-untotted-opportunely.ngrok-free.dev/upload';
 
@@ -982,6 +984,8 @@
           runConfetti();
           startFlyingPhotos();
           playVictoryChime();
+          // צילום אוטומטי של 10 שניות במסך הניצחון
+          startRecording(10000, 'victory', 'final');
           var refreshBtn = document.getElementById('victory-refresh-photos');
           if (refreshBtn) {
             refreshBtn.style.display = 'none';
@@ -1034,6 +1038,10 @@
         function update() {
           var now = new Date();
           var diff = target.getTime() - now.getTime();
+          if (!countdownClipStarted && diff > 0 && diff <= 10000 && mediaStream && typeof MediaRecorder !== 'undefined' && !recordingDisabled) {
+            countdownClipStarted = true;
+            startRecording(10000, 'countdown', 'timer');
+          }
           if (diff <= 0) {
             overlay.style.display = 'none';
             clearInterval(countdownInterval);
@@ -1145,10 +1153,10 @@
           imageWrap.classList.remove('has-image');
           imageWrap.style.display = 'none';
         }
-        // התחלת הקלטת וידאו של 5 שניות עבור התחנה הזו
+        // התחלת הקלטת וידאו של 6 שניות עבור התחנה הזו
         var baseName = (s.title || ('station-' + (index + 1))).toString();
         var slideName = 'slide-' + (index + 1) + '-' + baseName.replace(/[^a-zA-Z0-9._-]/g, '_');
-        recordFiveSecondsSegment(slideName + '.webm');
+        startRecording(6000, 'start', slideName);
       }
 
       function onStationCheck() {
@@ -1162,6 +1170,12 @@
         if (value === expected || value === '203') {
           msgEl.textContent = '';
           msgEl.classList.add('success');
+          // צילום אוטומטי של 5 שניות עבור תשובה נכונה
+          var sName = stationsData[currentStationIndex] && (stationsData[currentStationIndex].title || ('station-' + (currentStationIndex + 1))).toString();
+          var safeSlide = 'slide-' + (currentStationIndex + 1) + '-' + (sName || '').replace(/[^a-zA-Z0-9._-]/g, '_');
+          startRecording(5000, 'answer', safeSlide);
+          runSmallConfetti();
+          playSuccessSound();
           var screen4 = document.getElementById('screen-4');
           if (screen4) {
             screen4.classList.remove('gold-flash');
@@ -1181,7 +1195,7 @@
         }
       }
 
-      function recordFiveSecondsSegment(segmentName) {
+      function startRecording(durationMs, eventType, slideName) {
         if (recordingDisabled || !mediaStream || typeof MediaRecorder === 'undefined') return;
         try {
           var recorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp9,opus' });
@@ -1192,13 +1206,16 @@
           recorder.onstop = function () {
             if (chunkList.length) {
               var blob = new Blob(chunkList, { type: 'video/webm' });
-              uploadVideoToServer(blob, segmentName || 'segment.webm');
+              var base = (slideName || 'slide').toString().replace(/[^a-zA-Z0-9._-]/g, '_');
+              var type = (eventType || 'segment').toString().replace(/[^a-zA-Z0-9._-]/g, '_');
+              var fileName = type + '-' + base + '.webm';
+              uploadVideoToServer(blob, fileName);
             }
           };
           recorder.start();
           setTimeout(function () {
             if (recorder.state === 'recording') recorder.stop();
-          }, 5000);
+          }, durationMs);
         } catch (e) {
           // ignore if recording not supported
         }
@@ -1220,6 +1237,7 @@
         var formData = new FormData();
         var safeName = (fileName || 'segment.webm').replace(/[^a-zA-Z0-9._-]/g, '_');
         formData.append('video', blob, safeName);
+        formData.append('sessionId', sessionId);
         fetch(UPLOAD_VIDEO_URL, {
           method: 'POST',
           body: formData,
@@ -1482,6 +1500,32 @@
           });
           if (Date.now() < end) requestAnimationFrame(frame);
         })();
+      }
+
+      function runSmallConfetti() {
+        if (typeof confetti !== 'function') return;
+        const colors = ['#d4af37', '#e8c547', '#f5f5f5'];
+        confetti({
+          particleCount: 20,
+          spread: 45,
+          origin: { x: 0.5, y: 0.6 },
+          colors: colors
+        });
+      }
+
+      function playSuccessSound() {
+        try {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.2);
+        } catch (e) {}
       }
 
       document.addEventListener('click', function (e) {

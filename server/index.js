@@ -26,13 +26,17 @@ app.use(cors({
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, VIDEOS_DIR);
+    const sessionId = (req.body && req.body.sessionId) ? req.body.sessionId.toString().replace(/[^a-zA-Z0-9._-]/g, '_') : 'no-session';
+    const sessionDir = path.join(VIDEOS_DIR, sessionId);
+    if (!fs.existsSync(sessionDir)) {
+      fs.mkdirSync(sessionDir, { recursive: true });
+    }
+    cb(null, sessionDir);
   },
   filename: function (req, file, cb) {
-    const date = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
     const original = (file.originalname || 'segment.webm').toString();
     const safeOriginal = original.replace(/[^a-zA-Z0-9._-]/g, '_');
-    cb(null, `${date}-${safeOriginal}`);
+    cb(null, safeOriginal);
   }
 });
 
