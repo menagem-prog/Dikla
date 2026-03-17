@@ -522,7 +522,7 @@
 
     .victory-close-btn {
       position: absolute;
-      top: 1rem;
+      top: calc(env(safe-area-inset-top, 0px) + 1.5rem);
       left: 1rem;
       width: 32px;
       height: 32px;
@@ -575,6 +575,8 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 0.5rem;
       justify-content: center;
+      max-height: 260px;
+      overflow-y: auto;
     }
 
     .victory-gallery img {
@@ -689,6 +691,27 @@
       color: var(--gold);
       letter-spacing: 0.12em;
       font-variant-numeric: tabular-nums;
+    }
+
+    #countdown-overlay.final-minute h1 {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    #countdown-overlay.final-minute p {
+      margin-bottom: 0.75rem;
+    }
+
+    #countdown-overlay.final-minute #countdown-timer {
+      font-size: clamp(3.2rem, 12vw, 4.2rem);
+      letter-spacing: 0.08em;
+      animation: finalPulse 1s ease-in-out infinite;
+    }
+
+    @keyframes finalPulse {
+      0% { transform: scale(1); color: var(--gold); }
+      50% { transform: scale(1.08); color: var(--gold-light); }
+      100% { transform: scale(1); color: var(--gold); }
     }
 
     /* Top-right menu (for creator) */
@@ -1070,6 +1093,9 @@
         function update() {
           var now = new Date();
           var diff = target.getTime() - now.getTime();
+          if (diff <= 60000 && diff > 0) {
+            overlay.classList.add('final-minute');
+          }
           if (!countdownClipStarted && diff > 0 && diff <= 10000 && mediaStream && typeof MediaRecorder !== 'undefined' && !recordingDisabled) {
             countdownClipStarted = true;
             startRecording(10000, 'countdown', 'timer');
@@ -1086,15 +1112,19 @@
             return;
           }
           var totalSec = Math.floor(diff / 1000);
-          var days = Math.floor(totalSec / 86400);
-          var hours = Math.floor((totalSec % 86400) / 3600);
-          var mins = Math.floor((totalSec % 3600) / 60);
-          var secs = totalSec % 60;
-          var dd = String(days).padStart(2, '0');
-          var hh = String(hours).padStart(2, '0');
-          var mm = String(mins).padStart(2, '0');
-          var ss = String(secs).padStart(2, '0');
-          timerEl.textContent = dd + ' ימים  ' + hh + ':' + mm + ':' + ss;
+          if (diff <= 60000) {
+            timerEl.textContent = String(totalSec).padStart(2, '0');
+          } else {
+            var days = Math.floor(totalSec / 86400);
+            var hours = Math.floor((totalSec % 86400) / 3600);
+            var mins = Math.floor((totalSec % 3600) / 60);
+            var secs = totalSec % 60;
+            var dd = String(days).padStart(2, '0');
+            var hh = String(hours).padStart(2, '0');
+            var mm = String(mins).padStart(2, '0');
+            var ss = String(secs).padStart(2, '0');
+            timerEl.textContent = dd + ' ימים  ' + hh + ':' + mm + ':' + ss;
+          }
         }
         update();
         countdownInterval = setInterval(update, 1000);
@@ -1429,7 +1459,7 @@
         fetch('family/family-photos.json?t=' + Date.now())
           .then(function (r) { return r.json(); })
           .then(function (arr) {
-            var list = Array.isArray(arr) && arr.length ? arr.slice(0, 9) : [];
+            var list = Array.isArray(arr) && arr.length ? arr : [];
             if (!list.length) return;
             list.forEach(function (filename, idx) {
               var img = document.createElement('img');
