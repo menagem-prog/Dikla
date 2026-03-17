@@ -515,52 +515,33 @@
     /* Screen 5 - Victory */
     .victory-screen {
       position: relative;
+      align-items: stretch;
+      justify-content: flex-start;
+      padding-top: 3rem;
     }
 
-    .victory-photos-wrap {
+    .victory-close-btn {
       position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
+      top: 1rem;
+      left: 1rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 245, 245, 0.4);
+      background: rgba(0, 0, 0, 0.6);
+      color: var(--text-white);
+      font-size: 1.3rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2;
     }
 
-    .victory-screen .victory-title,
-    .victory-screen .victory-text,
-    .victory-screen .btn {
-      position: relative;
-      z-index: 1;
-    }
-
-    .flying-photo {
-      position: absolute;
-      width: 176px;
-      height: 176px;
-      object-fit: cover;
-      border-radius: 16px;
-      border: 2px solid rgba(212, 175, 55, 0.6);
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
-      opacity: 0;
-      animation: flyPhoto 8s ease-in-out forwards;
-    }
-
-    @keyframes flyPhoto {
-      0% {
-        transform: translateY(10px) scale(0.9);
-        opacity: 0;
-      }
-      15% {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-      }
-      70% {
-        transform: translateY(-10px) scale(1.02);
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(-20px) scale(0.96);
-        opacity: 0;
-      }
+    .victory-close-btn:hover {
+      background: rgba(212, 175, 55, 0.2);
+      border-color: rgba(212, 175, 55, 0.8);
     }
 
     .victory-title {
@@ -576,6 +557,46 @@
       line-height: 1.8;
       color: rgba(245, 245, 245, 0.95);
       max-width: 340px;
+    }
+
+    .victory-closing {
+      font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+      color: rgba(212, 175, 55, 0.95);
+      font-style: italic;
+      margin-top: 1rem;
+      max-width: 320px;
+    }
+
+    .victory-gallery {
+      margin-top: 1.75rem;
+      width: 100%;
+      max-width: 360px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .victory-gallery img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 2px solid rgba(212, 175, 55, 0.5);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      animation: galleryFadeIn 0.7s ease-out forwards;
+    }
+
+    @keyframes galleryFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .victory-closing {
@@ -900,13 +921,13 @@
 
   <!-- Screen 5: Victory -->
   <div id="screen-5" class="screen victory-screen">
-    <div id="victory-photos-wrap" class="victory-photos-wrap" aria-hidden="true"></div>
+    <button type="button" id="victory-reset-btn" class="victory-close-btn" aria-label="איפוס וסגירה">×</button>
     <h1 class="victory-title">הצלחת! החבילה שלך נמצאת בתנור!</h1>
     <p class="victory-text">עברת את כל המסע בהצלחה. עכשיו לפתוח את החבילה – והמשימות שמחכות בפנים. בהצלחה!</p>
     <p class="victory-closing">תזכרי: לא רק היום את במרכז – כל השנה את המתנה שלנו.</p>
-    <button type="button" class="btn btn-subtle" id="victory-refresh-photos" style="margin-top:1rem; display:none;">תראי לי שוב את התמונות</button>
     <a id="video-download" class="btn" href="#" style="display:none; margin-top:1rem;" download="dikla-journey.webm">להורדת הסרטון שלך</a>
     <div id="upload-status" class="upload-status" aria-live="polite"></div>
+    <div id="victory-gallery" class="victory-gallery" aria-hidden="true"></div>
   </div>
 
   <div id="intro-overlay" class="intro-overlay" aria-hidden="true">
@@ -927,7 +948,18 @@
       var MASTER_SKIP_CODE = '11111111';
       var recordingDisabled = false;
       var devGotoStationIndex = null;
-      var sessionId = 'session-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+      var sessionId = (function () {
+        var d = new Date();
+        var yyyy = d.getFullYear();
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        var HH = String(d.getHours()).padStart(2, '0');
+        var MM = String(d.getMinutes()).padStart(2, '0');
+        var SS = String(d.getSeconds()).padStart(2, '0');
+        var base = yyyy + '-' + mm + '-' + dd + '_' + HH + '-' + MM + '-' + SS;
+        var rnd = Math.floor(Math.random() * 1000000);
+        return base + '_session-' + rnd;
+      })();
       var countdownClipStarted = false;
       // כתובת ה-ngrok ששומר את הווידאו עבור בדיקות מהמובייל
       var UPLOAD_VIDEO_URL = 'https://laureen-untotted-opportunely.ngrok-free.dev/upload';
@@ -982,7 +1014,7 @@
         }
         if (num === '5') {
           runConfetti();
-          startFlyingPhotos();
+          buildVictoryGallery();
           playVictoryChime();
           // צילום אוטומטי של 10 שניות במסך הניצחון
           startRecording(10000, 'victory', 'final');
@@ -1390,75 +1422,27 @@
         });
       }
 
-      function startFlyingPhotos() {
-        var wrap = document.getElementById('victory-photos-wrap');
-        if (!wrap) return;
-        wrap.innerHTML = '';
-
-        var fallback = [];
-        for (var i = 1; i <= 40; i++) fallback.push('photo-' + (i < 10 ? '0' + i : '' + i) + '.jpeg');
-
-        function startLoop(list) {
-          if (!list || list.length === 0) return;
-          var idx = 0;
-          if (window._flyingPhotosTimer) clearInterval(window._flyingPhotosTimer);
-          window._flyingPhotosTimer = setInterval(function () {
-            // שמירה על מספר תמונות מוגבל על המסך
-            var existing = wrap.querySelectorAll('.flying-photo');
-            if (existing.length > 6) return;
-
-            var filename = list[idx % list.length];
-            idx++;
-            var img = document.createElement('img');
-            img.className = 'flying-photo';
-            img.src = 'family/' + encodeURIComponent(filename);
-            img.alt = '';
-            img.loading = 'lazy';
-            // בחירת מיקום כך שייפרס על המסך ועם כמה שפחות חפיפות
-            var placed = false;
-            for (var attempt = 0; attempt < 10 && !placed; attempt++) {
-              var left = Math.random() * 70 + 15; // 15%–85%
-              var top = Math.random() * 70 + 10;  // 10%–80%
-              var ok = true;
-              for (var i = 0; i < existing.length; i++) {
-                var rect = existing[i].getBoundingClientRect();
-                var wrapRect = wrap.getBoundingClientRect();
-                var exLeft = ((rect.left + rect.right) / 2 - wrapRect.left) / wrapRect.width * 100;
-                var exTop = ((rect.top + rect.bottom) / 2 - wrapRect.top) / wrapRect.height * 100;
-                var dx = left - exLeft;
-                var dy = top - exTop;
-                if (Math.sqrt(dx * dx + dy * dy) < 25) { // מרחק מינימלי באחוזים
-                  ok = false;
-                  break;
-                }
-              }
-              if (ok) {
-                img.style.left = left + '%';
-                img.style.top = top + '%';
-                placed = true;
-              }
-            }
-            if (!placed) {
-              img.style.left = (Math.random() * 70 + 15) + '%';
-              img.style.top = (Math.random() * 70 + 10) + '%';
-            }
-            img.style.animationDuration = (6 + Math.random() * 4) + 's';
-            img.style.animationDelay = '0s';
-            img.onerror = function () { this.remove(); };
-            img.addEventListener('animationend', function () {
-              this.remove();
-            });
-            wrap.appendChild(img);
-          }, 1200);
-        }
-
+      function buildVictoryGallery() {
+        var gallery = document.getElementById('victory-gallery');
+        if (!gallery) return;
+        gallery.innerHTML = '';
         fetch('family/family-photos.json?t=' + Date.now())
           .then(function (r) { return r.json(); })
           .then(function (arr) {
-            if (Array.isArray(arr) && arr.length > 0) startLoop(arr);
-            else startLoop(fallback);
+            var list = Array.isArray(arr) && arr.length ? arr.slice(0, 9) : [];
+            if (!list.length) return;
+            list.forEach(function (filename, idx) {
+              var img = document.createElement('img');
+              img.src = 'family/' + encodeURIComponent(filename);
+              img.alt = '';
+              img.loading = 'lazy';
+              img.style.animationDelay = (idx * 80) + 'ms';
+              img.onerror = function () { this.style.display = 'none'; };
+              gallery.appendChild(img);
+            });
+            gallery.setAttribute('aria-hidden', 'false');
           })
-          .catch(function () { startLoop(fallback); });
+          .catch(function () {});
       }
 
       function playVictoryChime() {
@@ -1528,6 +1512,48 @@
         } catch (e) {}
       }
 
+      function createNewSessionId() {
+        var d = new Date();
+        var yyyy = d.getFullYear();
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        var HH = String(d.getHours()).padStart(2, '0');
+        var MM = String(d.getMinutes()).padStart(2, '0');
+        var SS = String(d.getSeconds()).padStart(2, '0');
+        var base = yyyy + '-' + mm + '-' + dd + '_' + HH + '-' + MM + '-' + SS;
+        var rnd = Math.floor(Math.random() * 1000000);
+        return base + '_session-' + rnd;
+      }
+
+      function resetAppState() {
+        if (mediaStream) {
+          try {
+            mediaStream.getTracks().forEach(function (t) { t.stop(); });
+          } catch (e) {}
+          mediaStream = null;
+        }
+        countdownClipStarted = false;
+        devGotoStationIndex = null;
+        currentStationIndex = 0;
+        sessionId = createNewSessionId();
+
+        var uploadEl = document.getElementById('upload-status');
+        if (uploadEl) {
+          uploadEl.textContent = '';
+          uploadEl.style.display = 'none';
+        }
+
+        var msgEl = document.getElementById('station-message');
+        if (msgEl) {
+          msgEl.textContent = '';
+          msgEl.className = 'message';
+        }
+        var inputEl = document.getElementById('station-input');
+        if (inputEl) inputEl.value = '';
+
+        showScreen(1);
+      }
+
       document.addEventListener('click', function (e) {
         var btn = e.target.closest('.btn');
         if (btn) {
@@ -1550,8 +1576,8 @@
             }, 2600);
             return;
           }
-          if (btn.id === 'victory-refresh-photos') {
-            startFlyingPhotos();
+          if (btn.id === 'victory-reset-btn') {
+            resetAppState();
             return;
           }
           var next = btn.getAttribute('data-next');
