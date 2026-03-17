@@ -30,7 +30,9 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const date = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-    cb(null, `dikla-journey-${date}.webm`);
+    const original = (file.originalname || 'segment.webm').toString();
+    const safeOriginal = original.replace(/[^a-zA-Z0-9._-]/g, '_');
+    cb(null, `${date}-${safeOriginal}`);
   }
 });
 

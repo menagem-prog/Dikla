@@ -922,7 +922,6 @@
       var stationsData = [];
       var currentStationIndex = 0;
       var mediaStream = null;
-      var recordedSegments = [];
       var countdownInterval = null;
       var countdownQuoteTimer = null;
       var MASTER_SKIP_CODE = '11111111';
@@ -1146,6 +1145,10 @@
           imageWrap.classList.remove('has-image');
           imageWrap.style.display = 'none';
         }
+        // התחלת הקלטת וידאו של 5 שניות עבור התחנה הזו
+        var baseName = (s.title || ('station-' + (index + 1))).toString();
+        var slideName = 'slide-' + (index + 1) + '-' + baseName.replace(/[^a-zA-Z0-9._-]/g, '_');
+        recordFiveSecondsSegment(slideName + '.webm');
       }
 
       function onStationCheck() {
@@ -1178,7 +1181,7 @@
         }
       }
 
-      function recordFiveSecondsSegment() {
+      function recordFiveSecondsSegment(segmentName) {
         if (recordingDisabled || !mediaStream || typeof MediaRecorder === 'undefined') return;
         try {
           var recorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp9,opus' });
@@ -1188,7 +1191,8 @@
           };
           recorder.onstop = function () {
             if (chunkList.length) {
-              recordedSegments.push(new Blob(chunkList, { type: 'video/webm' }));
+              var blob = new Blob(chunkList, { type: 'video/webm' });
+              uploadVideoToServer(blob, segmentName || 'segment.webm');
             }
           };
           recorder.start();
@@ -1210,11 +1214,12 @@
         el.style.fontSize = '0.95rem';
       }
 
-      function uploadVideoToServer(blob) {
+      function uploadVideoToServer(blob, fileName) {
         if (!UPLOAD_VIDEO_URL || !blob) return;
         setUploadStatus('שומר את הסרטון במחשב...');
         var formData = new FormData();
-        formData.append('video', blob, 'dikla-journey.webm');
+        var safeName = (fileName || 'segment.webm').replace(/[^a-zA-Z0-9._-]/g, '_');
+        formData.append('video', blob, safeName);
         fetch(UPLOAD_VIDEO_URL, {
           method: 'POST',
           body: formData,
@@ -1234,16 +1239,7 @@
       }
 
       function buildFinalVideoAndGoToVictory() {
-        if (recordedSegments.length) {
-          var blob = new Blob(recordedSegments, { type: 'video/webm' });
-          var url = URL.createObjectURL(blob);
-          var link = document.getElementById('video-download');
-          if (link) {
-            link.href = url;
-            link.style.display = 'inline-block';
-          }
-          uploadVideoToServer(blob);
-        }
+        // כבר שלחנו קטע נפרד מכל תחנה; כאן רק מעבר למסך הסיום
         showScreen(5);
       }
 
