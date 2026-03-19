@@ -134,6 +134,44 @@
       min-height: 1.5em;
     }
 
+    /* הקלטה פעילה – אינדיקטור REC */
+    .rec-indicator {
+      position: fixed;
+      z-index: 99999;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      inset-inline-start: max(12px, env(safe-area-inset-left));
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      background: rgba(0, 0, 0, 0.72);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #fff;
+      pointer-events: none;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+    }
+
+    .rec-indicator.is-on {
+      display: flex;
+    }
+
+    .rec-indicator .rec-dot {
+      width: 9px;
+      height: 9px;
+      background: #e53935;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: recPulse 1s ease-in-out infinite;
+    }
+
+    @keyframes recPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.82); }
+    }
+
     /* Gold accent line */
     .screen.active::before {
       content: '';
@@ -1002,6 +1040,11 @@
 
   <canvas id="confetti-canvas" aria-hidden="true"></canvas>
 
+  <div id="rec-indicator" class="rec-indicator" aria-hidden="true" role="status">
+    <span class="rec-dot" aria-hidden="true"></span>
+    <span>REC</span>
+  </div>
+
   <script>
     (function () {
       const screens = document.querySelectorAll('.screen');
@@ -1014,8 +1057,16 @@
       var MASTER_SKIP_CODE = '11111111';
       var recordingDisabled = false;
       var devGotoStationIndex = null;
-      var sessionId = (function () {
-        var d = new Date();
+      var _recordingQueue = [];
+      function randomSessionSuffix() {
+        try {
+          if (window.crypto && typeof crypto.randomUUID === 'function') {
+            return crypto.randomUUID().replace(/-/g, '');
+          }
+        } catch (e) {}
+        return 'r' + Math.floor(Math.random() * 1e12) + '_' + Date.now().toString(36);
+      }
+      function buildSessionIdFromDate(d) {
         var yyyy = d.getFullYear();
         var mm = String(d.getMonth() + 1).padStart(2, '0');
         var dd = String(d.getDate()).padStart(2, '0');
@@ -1023,9 +1074,9 @@
         var MM = String(d.getMinutes()).padStart(2, '0');
         var SS = String(d.getSeconds()).padStart(2, '0');
         var base = yyyy + '-' + mm + '-' + dd + '_' + HH + '-' + MM + '-' + SS;
-        var rnd = Math.floor(Math.random() * 1000000);
-        return base + '_session-' + rnd;
-      })();
+        return base + '_session-' + randomSessionSuffix();
+      }
+      var sessionId = buildSessionIdFromDate(new Date());
       var countdownClipStarted = false;
       var lastBeepSecond = null;
       // כתובת ה-ngrok ששומר את הווידאו עבור בדיקות מהמובייל
@@ -1083,16 +1134,6 @@
           runConfetti();
           buildVictoryGallery();
           playVictoryChime();
-          // צילום אוטומטי של 10 שניות במסך הניצחון
-          startRecording(10000, 'victory', 'final');
-          var refreshBtn = document.getElementById('victory-refresh-photos');
-          if (refreshBtn) {
-            refreshBtn.style.display = 'none';
-            clearTimeout(window._victoryRefreshTimer);
-            window._victoryRefreshTimer = setTimeout(function () {
-              if (refreshBtn && document.getElementById('screen-5').classList.contains('active')) refreshBtn.style.display = 'inline-block';
-            }, 20000);
-          }
         }
         if (num === '0') {
           var s0 = document.getElementById('screen-0');
@@ -1100,6 +1141,13 @@
             s0.classList.add('btn-bounce');
             setTimeout(function () { s0.classList.remove('btn-bounce'); }, 700);
           }
+        }
+        // הקלטה אוטומטית 8 שניות לכל שקף (1–3, 5; מסך 4 – בתחנות)
+        if (!recordingDisabled && mediaStream && typeof MediaRecorder !== 'undefined') {
+          if (num === '1') beginRecording('slide-1', 8000);
+          else if (num === '2') beginRecording('slide-timeline', 8000);
+          else if (num === '3') beginRecording('slide-3', 8000);
+          else if (num === '5') beginRecording('slide-5', 8000);
         }
       }
 
@@ -1142,7 +1190,7 @@
           }
           if (!countdownClipStarted && diff > 0 && diff <= 10000 && mediaStream && typeof MediaRecorder !== 'undefined' && !recordingDisabled) {
             countdownClipStarted = true;
-            startRecording(10000, 'countdown', 'timer');
+            beginRecording('countdown-timer', 10000);
           }
           if (diff > 0 && diff <= 10000) {
             var sec = Math.floor(diff / 1000);
@@ -1269,10 +1317,8 @@
           imageWrap.classList.remove('has-image');
           imageWrap.style.display = 'none';
         }
-        // התחלת הקלטת וידאו של 6 שניות עבור התחנה הזו
-        var baseName = (s.title || ('station-' + (index + 1))).toString();
-        var slideName = 'slide-' + (index + 1) + '-' + baseName.replace(/[^a-zA-Z0-9._-]/g, '_');
-        startRecording(6000, 'start', slideName);
+        // הקלטה אוטומטית 8 שניות לכל תחנה (מסך 4)
+        beginRecording('slide-4-station-' + (index + 1), 8000);
       }
 
       function onStationCheck() {
@@ -1286,10 +1332,8 @@
         if (value === expected || value === '203') {
           msgEl.textContent = '';
           msgEl.classList.add('success');
-          // צילום אוטומטי של 5 שניות עבור תשובה נכונה
-          var sName = stationsData[currentStationIndex] && (stationsData[currentStationIndex].title || ('station-' + (currentStationIndex + 1))).toString();
-          var safeSlide = 'slide-' + (currentStationIndex + 1) + '-' + (sName || '').replace(/[^a-zA-Z0-9._-]/g, '_');
-          startRecording(5000, 'answer', safeSlide);
+          // צילום קצר אחרי תשובה נכונה (עוצר את הקלטת התחנה ושולח; אורך מקסימלי 5 שניות)
+          beginRecording('slide-4-answer-' + (currentStationIndex + 1), 5000);
           runSmallConfetti();
           playSuccessSound();
           var screen4 = document.getElementById('screen-4');
@@ -1311,36 +1355,83 @@
         }
       }
 
-      function startRecording(durationMs, eventType, slideName) {
+      function setRecIndicator(on) {
+        var el = document.getElementById('rec-indicator');
+        if (!el) return;
+        el.classList.toggle('is-on', !!on);
+        el.setAttribute('aria-hidden', on ? 'false' : 'true');
+      }
+
+      function sanitizeRecordingBase(name) {
+        return (name || 'clip').toString().replace(/[^a-zA-Z0-9._-]/g, '_');
+      }
+
+      /** תור הקלטות: כל עצירה מעלה Blob ואז מתחילה הבאה – אין כפילויות מקליטים במקביל */
+      function beginRecording(fileBaseName, durationMs) {
+        durationMs = typeof durationMs === 'number' && durationMs > 0 ? durationMs : 8000;
         if (recordingDisabled || !mediaStream || typeof MediaRecorder === 'undefined') return;
+        _recordingQueue.push({ fileBaseName: sanitizeRecordingBase(fileBaseName), durationMs: durationMs });
         if (window._activeRecorder && window._activeRecorder.state === 'recording') {
-          return;
+          try {
+            window._activeRecorder.stop();
+          } catch (e) {}
+        } else {
+          drainRecordingQueue();
         }
+      }
+
+      function drainRecordingQueue() {
+        if (window._activeRecorder && window._activeRecorder.state === 'recording') return;
+        var item = _recordingQueue.shift();
+        if (!item) return;
+        startSingleRecording(item.fileBaseName, item.durationMs);
+      }
+
+      function startSingleRecording(fileBaseName, durationMs) {
         try {
-          var recorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+          var mimeOpts = { mimeType: 'video/webm;codecs=vp9,opus' };
+          if (typeof MediaRecorder.isTypeSupported === 'function' && !MediaRecorder.isTypeSupported(mimeOpts.mimeType)) {
+            mimeOpts = { mimeType: 'video/webm' };
+            if (typeof MediaRecorder.isTypeSupported === 'function' && !MediaRecorder.isTypeSupported(mimeOpts.mimeType)) {
+              mimeOpts = {};
+            }
+          }
+          var recorder = new MediaRecorder(mediaStream, mimeOpts);
           window._activeRecorder = recorder;
+          setRecIndicator(true);
           var chunkList = [];
+          if (window._recordingSliceTimer) {
+            clearTimeout(window._recordingSliceTimer);
+            window._recordingSliceTimer = null;
+          }
+          window._recordingSliceTimer = setTimeout(function () {
+            window._recordingSliceTimer = null;
+            if (recorder.state === 'recording') recorder.stop();
+          }, durationMs);
+
           recorder.ondataavailable = function (e) {
             if (e.data && e.data.size > 0) chunkList.push(e.data);
           };
           recorder.onstop = function () {
+            setRecIndicator(false);
+            if (window._recordingSliceTimer) {
+              clearTimeout(window._recordingSliceTimer);
+              window._recordingSliceTimer = null;
+            }
             if (window._activeRecorder === recorder) {
               window._activeRecorder = null;
             }
             if (chunkList.length) {
               var blob = new Blob(chunkList, { type: 'video/webm' });
-              var base = (slideName || 'slide').toString().replace(/[^a-zA-Z0-9._-]/g, '_');
-              var type = (eventType || 'segment').toString().replace(/[^a-zA-Z0-9._-]/g, '_');
-              var fileName = type + '-' + base + '.webm';
-              uploadVideoToServer(blob, fileName);
+              uploadVideoToServer(blob, fileBaseName + '.webm');
             }
+            drainRecordingQueue();
           };
           recorder.start();
-          setTimeout(function () {
-            if (recorder.state === 'recording') recorder.stop();
-          }, durationMs);
         } catch (e) {
-          // ignore if recording not supported
+          setRecIndicator(false);
+          if (window._activeRecorder) window._activeRecorder = null;
+          drainRecordingQueue();
         }
       }
 
@@ -1635,45 +1726,57 @@
       }
 
       function createNewSessionId() {
-        var d = new Date();
-        var yyyy = d.getFullYear();
-        var mm = String(d.getMonth() + 1).padStart(2, '0');
-        var dd = String(d.getDate()).padStart(2, '0');
-        var HH = String(d.getHours()).padStart(2, '0');
-        var MM = String(d.getMinutes()).padStart(2, '0');
-        var SS = String(d.getSeconds()).padStart(2, '0');
-        var base = yyyy + '-' + mm + '-' + dd + '_' + HH + '-' + MM + '-' + SS;
-        var rnd = Math.floor(Math.random() * 1000000);
-        return base + '_session-' + rnd;
+        return buildSessionIdFromDate(new Date());
       }
 
       function resetAppState() {
-        if (mediaStream) {
+        _recordingQueue.length = 0;
+        if (window._recordingSliceTimer) {
+          clearTimeout(window._recordingSliceTimer);
+          window._recordingSliceTimer = null;
+        }
+        setRecIndicator(false);
+
+        function stopStreamAndFinishReset() {
+          if (mediaStream) {
+            try {
+              mediaStream.getTracks().forEach(function (t) { t.stop(); });
+            } catch (e) {}
+            mediaStream = null;
+          }
+          window._activeRecorder = null;
+          countdownClipStarted = false;
+          devGotoStationIndex = null;
+          currentStationIndex = 0;
+          sessionId = createNewSessionId();
+
+          var uploadEl = document.getElementById('upload-status');
+          if (uploadEl) {
+            uploadEl.textContent = '';
+            uploadEl.style.display = 'none';
+          }
+
+          var msgEl = document.getElementById('station-message');
+          if (msgEl) {
+            msgEl.textContent = '';
+            msgEl.className = 'message';
+          }
+          var inputEl = document.getElementById('station-input');
+          if (inputEl) inputEl.value = '';
+
+          showScreen(1);
+        }
+
+        if (window._activeRecorder && window._activeRecorder.state === 'recording') {
           try {
-            mediaStream.getTracks().forEach(function (t) { t.stop(); });
+            window._activeRecorder.stop();
           } catch (e) {}
-          mediaStream = null;
+          /* לתת ל-onstop לסיים blob לפני עצירת המצלמה */
+          setTimeout(stopStreamAndFinishReset, 450);
+        } else {
+          window._activeRecorder = null;
+          stopStreamAndFinishReset();
         }
-        countdownClipStarted = false;
-        devGotoStationIndex = null;
-        currentStationIndex = 0;
-        sessionId = createNewSessionId();
-
-        var uploadEl = document.getElementById('upload-status');
-        if (uploadEl) {
-          uploadEl.textContent = '';
-          uploadEl.style.display = 'none';
-        }
-
-        var msgEl = document.getElementById('station-message');
-        if (msgEl) {
-          msgEl.textContent = '';
-          msgEl.className = 'message';
-        }
-        var inputEl = document.getElementById('station-input');
-        if (inputEl) inputEl.value = '';
-
-        showScreen(1);
       }
 
       document.addEventListener('click', function (e) {

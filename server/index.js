@@ -26,7 +26,8 @@ app.use(cors({
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const sessionId = (req.body && req.body.sessionId) ? req.body.sessionId.toString().replace(/[^a-zA-Z0-9._-]/g, '_') : 'no-session';
+    let sessionId = (req.body && req.body.sessionId) ? req.body.sessionId.toString().replace(/[^a-zA-Z0-9._-]/g, '_') : 'no-session';
+    if (sessionId.length > 180) sessionId = sessionId.slice(0, 180);
     const sessionDir = path.join(VIDEOS_DIR, sessionId);
     if (!fs.existsSync(sessionDir)) {
       fs.mkdirSync(sessionDir, { recursive: true });
